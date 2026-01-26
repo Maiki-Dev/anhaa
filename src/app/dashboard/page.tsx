@@ -2,6 +2,10 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { markAsPaid } from './actions'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Star, Users, CreditCard, CheckCircle2, XCircle } from 'lucide-react'
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -39,75 +43,135 @@ export default async function Dashboard() {
     return progress?.some((p: any) => p.group_id === groupId && p.paid)
   }
 
+  const getLoanTypeName = (type: string) => {
+    switch(type) {
+      case 'bank': return 'Банк'
+      case 'nbfi': return 'ББСБ'
+      case 'app': return 'Аппликейшн'
+      default: return 'Тодорхойгүй'
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="md:flex md:items-center md:justify-between">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            Сайн байна уу, {profile?.name}!
-          </h2>
-        </div>
+    <div className="container mx-auto py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Сайн байна уу, <span className="text-primary">{profile?.name}</span>!
+        </h1>
+        <p className="text-muted-foreground">Өнөөдөр танд юу хийх хэрэгтэй вэ?</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
-          <dt className="truncate text-sm font-medium text-gray-500">Миний Одууд</dt>
-          <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{profile?.stars || 0} ⭐</dd>
-        </div>
-        <div className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
-          <dt className="truncate text-sm font-medium text-gray-500">Нэгдсэн бүлгүүд</dt>
-          <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{myGroups?.length || 0}</dd>
-        </div>
-        <div className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
-          <dt className="truncate text-sm font-medium text-gray-500">Зээлийн төрөл</dt>
-          <dd className="mt-1 text-xl font-semibold tracking-tight text-gray-900 capitalize">
-            {profile?.loan_type === 'bank' ? 'Банк' : 
-             profile?.loan_type === 'nbfi' ? 'ББСБ' : 
-             profile?.loan_type === 'app' ? 'Аппликейшн' : 'Тодорхойгүй'}
-          </dd>
-        </div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Миний Одууд</CardTitle>
+            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{profile?.stars || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Идэвхтэй оролцооны үнэлгээ
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Нэгдсэн бүлгүүд</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{myGroups?.length || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Таны идэвхтэй бүлгүүд
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Зээлийн төрөл</CardTitle>
+            <CreditCard className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold capitalize">
+              {getLoanTypeName(profile?.loan_type)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Бүртгэлтэй зээлийн ангилал
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Active Groups & Progress */}
-      <h3 className="text-lg font-medium leading-6 text-gray-900">Миний бүлгүүд & Ахиц</h3>
-      
-      {myGroups && myGroups.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {myGroups.map((member: any) => (
-            <div key={member.group_id} className="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
-              <div className="px-4 py-5 sm:px-6">
-                <h3 className="text-lg font-medium text-gray-900">{member.groups.name}</h3>
-                <p className="mt-1 text-sm text-gray-500">Сар бүр: {member.groups.monthly_contribution}₮</p>
-              </div>
-              <div className="px-4 py-5 sm:p-6">
-                <p className="text-sm text-gray-500 mb-4">
-                  Энэ сарын төлөв: {hasPaidThisMonth(member.group_id) ? 
-                    <span className="text-green-600 font-bold">Төлсөн ✅</span> : 
-                    <span className="text-red-600 font-bold">Төлөөгүй ❌</span>
-                  }
-                </p>
-                
-                {!hasPaidThisMonth(member.group_id) && (
-                  <Link
-                    href={`/payment/${member.group_id}`}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 sm:text-sm"
-                  >
-                    Төлбөр төлөх
-                  </Link>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-500">Та одоогоор ямар ч бүлэгт нэгдээгүй байна.</p>
-          <a href="/groups" className="mt-4 inline-block text-blue-600 hover:text-blue-500">
-            Бүлгүүдийг үзэх &rarr;
-          </a>
-        </div>
-      )}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold tracking-tight">Миний бүлгүүд & Ахиц</h3>
+        
+        {myGroups && myGroups.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {myGroups.map((member: any) => {
+              const paid = hasPaidThisMonth(member.group_id)
+              return (
+                <Card key={member.group_id} className="flex flex-col overflow-hidden border-t-4 border-t-primary shadow-sm hover:shadow-md transition-all duration-200">
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{member.groups.name}</CardTitle>
+                        <CardDescription className="mt-1">
+                          Сар бүр: <span className="font-semibold text-foreground">{member.groups.monthly_contribution.toLocaleString()}₮</span>
+                        </CardDescription>
+                      </div>
+                      {paid ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Төлсөн
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
+                          <XCircle className="w-3 h-3" /> Төлөөгүй
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-1 pb-6">
+                    <div className="space-y-4">
+                      <div className="text-sm text-muted-foreground">
+                        Энэ сарын хураамжийн төлөв:
+                      </div>
+                      
+                      {!paid ? (
+                        <Button asChild className="w-full" size="lg">
+                          <Link href={`/payment/${member.group_id}`}>
+                            Төлбөр төлөх
+                          </Link>
+                        </Button>
+                      ) : (
+                        <div className="w-full bg-secondary/50 rounded-md p-3 text-center text-sm font-medium text-muted-foreground border border-border">
+                           Төлбөр амжилттай хийгдсэн
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        ) : (
+          <Card className="bg-muted/50 border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-foreground">Одоогоор бүлэгт нэгдээгүй байна</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                Та шинэ бүлэгт нэгдэж эсвэл өөрөө бүлэг үүсгэн хамт олны дэмжлэгийг аваарай.
+              </p>
+              <Button asChild className="mt-6" variant="outline">
+                <Link href="/groups">Бүлгүүд харах</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }
