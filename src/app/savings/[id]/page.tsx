@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus } from 'lucide-react'
 import { revalidatePath } from 'next/cache'
 
+import { AddMemberForm } from './AddMemberForm'
+
 export default async function SavingsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
@@ -68,10 +70,10 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
     revalidatePath(`/savings/${id}`)
   }
 
-  async function addMember(formData: FormData) {
+  async function addMember(formData: FormData): Promise<{ error?: string; success?: boolean }> {
     'use server'
     const email = formData.get('email') as string
-    if (!email) return
+    if (!email) return { error: 'Имэйл оруулна уу' }
 
     const supabase = await createClient()
     
@@ -83,16 +85,47 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
       .single()
     
     if (!foundUser) {
-      // Handle user not found error (maybe return error state)
-      return
+      return { error: 'Хэрэглэгч олдсонгүй' }
     }
 
-    await supabase.from('savings_members').insert({
+    // Check if already a member
+    const { data: existingMember } = await supabase
+      .from('savings_members')
+      .select('id')
+      .eq('account_id', id)
+      .eq('user_id', foundUser.id)
+      .single()
+
+    if (existingMember) {
+      return { error: 'Аль хэдийн гишүүн болсон байна' }
+    }
+
+    const { error: insertError } = await supabase.from('savings_members').insert({
       account_id: id,
-      user_id: foundUser.id
+      user_id: foundUser.id,
+      status: 'invited'
     })
 
+    if (insertError) {
+      console.error('Error adding member:', insertError)
+      return { error: 'Гишүүн нэмэхэд алдаа гарлаа' }
+    }
+
+    // Create notification
+    const { error: notifError } = await supabase.from('notifications').insert({
+      user_id: foundUser.id,
+      type: 'savings_invite',
+      title: 'Хадгаламжийн урилга',
+      message: `"${account.name}" хадгаламжид нэгдэх урилга ирлээ.`,
+      data: { account_id: id, account_name: account.name }
+    })
+    
+    if (notifError) {
+      console.error('Error creating notification:', notifError)
+    }
+
     revalidatePath(`/savings/${id}`)
+    return { success: true }
   }
 
   return (
@@ -140,21 +173,7 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
             <CardTitle>Гишүүн нэмэх</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={addMember} className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="email" className="sr-only">Имэйл</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Хэрэглэгчийн имэйл"
-                  required
-                />
-              </div>
-              <Button type="submit" variant="outline">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </form>
+            <AddMemberForm onAddMember={addMember} />
           </CardContent>
         </Card>
       </div>

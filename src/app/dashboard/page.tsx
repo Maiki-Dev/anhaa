@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Star, Users, CreditCard, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { NotificationsList } from './NotificationsList'
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -54,6 +55,14 @@ export default async function Dashboard() {
     .gte('created_at', startOfMonth)
     .lte('created_at', endOfMonth)
 
+  // Fetch notifications
+  const { data: notifications } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_read', false)
+    .order('created_at', { ascending: false })
+
   const hasPendingPayment = (groupId: string) => {
     return payments?.some((p: any) => p.group_id === groupId && p.status === 'pending')
   }
@@ -75,6 +84,8 @@ export default async function Dashboard() {
         </h1>
         <p className="text-muted-foreground">Өнөөдөр танд юу хийх хэрэгтэй вэ?</p>
       </div>
+
+      <NotificationsList notifications={notifications || []} />
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">

@@ -58,6 +58,7 @@ create table if not exists payments (
 create table if not exists savings_accounts (
   id uuid default uuid_generate_v4() primary key,
   name text not null,
+  created_by uuid references users(id),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -154,6 +155,14 @@ create policy "Savings members viewable by members." on savings_members for sele
   account_id in (select get_my_savings_account_ids())
 );
 create policy "Authenticated users can join savings." on savings_members for insert to authenticated with check (auth.uid() = user_id);
+
+create policy "Creators can add members." on savings_members for insert to authenticated with check (
+  exists (
+    select 1 from savings_accounts
+    where id = savings_members.account_id
+    and created_by = auth.uid()
+  )
+);
 
 create policy "Savings transactions viewable by members." on savings_transactions for select using (
   account_id in (select get_my_savings_account_ids())
