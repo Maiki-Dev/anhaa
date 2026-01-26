@@ -5,7 +5,7 @@ import { markAsPaid } from './actions'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Star, Users, CreditCard, CheckCircle2, XCircle } from 'lucide-react'
+import { Star, Users, CreditCard, CheckCircle2, XCircle, Clock } from 'lucide-react'
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -41,6 +41,21 @@ export default async function Dashboard() {
 
   const hasPaidThisMonth = (groupId: string) => {
     return progress?.some((p: any) => p.group_id === groupId && p.paid)
+  }
+
+  // Fetch this month's payments (to check for pending)
+  const startOfMonth = `${currentMonth}-01`
+  const endOfMonth = `${currentMonth}-31`
+  
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('group_id, status')
+    .eq('user_id', user.id)
+    .gte('created_at', startOfMonth)
+    .lte('created_at', endOfMonth)
+
+  const hasPendingPayment = (groupId: string) => {
+    return payments?.some((p: any) => p.group_id === groupId && p.status === 'pending')
   }
 
   const getLoanTypeName = (type: string) => {
@@ -113,6 +128,8 @@ export default async function Dashboard() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {myGroups.map((member: any) => {
               const paid = hasPaidThisMonth(member.group_id)
+              const pending = hasPendingPayment(member.group_id)
+              
               return (
                 <Card key={member.group_id} className="flex flex-col overflow-hidden border-t-4 border-t-primary shadow-sm hover:shadow-md transition-all duration-200">
                   <CardHeader className="pb-4">
@@ -127,6 +144,10 @@ export default async function Dashboard() {
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Төлсөн
                         </Badge>
+                      ) : pending ? (
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> Хүлээгдэж буй
+                        </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
                           <XCircle className="w-3 h-3" /> Төлөөгүй
@@ -140,12 +161,16 @@ export default async function Dashboard() {
                         Энэ сарын хураамжийн төлөв:
                       </div>
                       
-                      {!paid ? (
+                      {!paid && !pending ? (
                         <Button asChild className="w-full" size="lg">
                           <Link href={`/payment/${member.group_id}`}>
                             Төлбөр төлөх
                           </Link>
                         </Button>
+                      ) : pending ? (
+                        <div className="w-full bg-yellow-50/50 rounded-md p-3 text-center text-sm font-medium text-yellow-700 border border-yellow-100">
+                           Төлбөр шалгагдаж байна
+                        </div>
                       ) : (
                         <div className="w-full bg-secondary/50 rounded-md p-3 text-center text-sm font-medium text-muted-foreground border border-border">
                            Төлбөр амжилттай хийгдсэн

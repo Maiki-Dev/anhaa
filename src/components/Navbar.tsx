@@ -38,13 +38,19 @@ export default async function Navbar() {
                 href="/dashboard"
                 className="text-sm font-medium transition-colors hover:text-primary"
               >
-                Хяналт
+                Хяналтын самбар
               </Link>
               <Link
                 href="/groups"
                 className="text-sm font-medium transition-colors hover:text-primary"
               >
-                Бүлгүүд
+                Бүлэг хамтрал
+              </Link>
+              <Link
+                href="/savings"
+                className="text-sm font-medium transition-colors hover:text-primary"
+              >
+                Хадгаламж
               </Link>
             </nav>
           )}

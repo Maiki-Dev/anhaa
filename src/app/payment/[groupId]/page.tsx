@@ -1,7 +1,13 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { verifyPayment } from './actions'
+import { submitPayment } from './actions'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default async function PaymentPage({
   params,
@@ -31,77 +37,102 @@ export default async function PaymentPage({
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Бүлэг олдсонгүй</h2>
-          <Link href="/dashboard" className="text-blue-600 hover:text-blue-500">
-            Буцах
-          </Link>
+          <Button asChild>
+            <Link href="/dashboard">Буцах</Link>
+          </Button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Төлбөр төлөх
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          {group.name} бүлгийн сарын хураамж
-        </p>
-      </div>
+    <div className="container max-w-lg mx-auto py-12">
+      <Card className="w-full shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Төлбөр төлөх</CardTitle>
+          <CardDescription>{group.name} бүлгийн сарын хураамж</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-muted/50 p-6 rounded-lg flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Төлөх дүн</span>
+            <span className="text-2xl font-bold text-primary">{group.monthly_contribution.toLocaleString()}₮</span>
+          </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <div className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-md">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500">Төлөх дүн:</span>
-                <span className="text-lg font-bold text-blue-700">{group.monthly_contribution}₮</span>
+          <Tabs defaultValue="qpay" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="qpay">QPay</TabsTrigger>
+              <TabsTrigger value="bank">Дансаар</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="qpay" className="space-y-4 pt-4">
+              <div className="text-center space-y-4">
+                <div className="bg-white border-2 border-dashed w-48 h-48 mx-auto flex items-center justify-center rounded-lg shadow-sm">
+                  <span className="text-muted-foreground text-xs">QR Code Placeholder</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  QPay ашиглан төлбөрөө хялбар, хурдан төлнө үү.
+                </p>
+                
+                <form action={async () => {
+                  'use server'
+                  await submitPayment(groupId, 'qpay', 'QPay QR payment')
+                }}>
+                  <Button className="w-full" size="lg" type="submit">
+                    Төлбөр шалгах
+                  </Button>
+                </form>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Данс:</span>
-                <span className="text-sm font-medium text-gray-900">ХААН Банк 5000000000</span>
-              </div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-sm text-gray-500">Хүлээн авагч:</span>
-                <span className="text-sm font-medium text-gray-900">Nexa Finance</span>
-              </div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-sm text-gray-500">Гүйлгээний утга:</span>
-                <span className="text-sm font-medium text-gray-900">{user.email}</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <div className="mb-4">
-                <p className="text-sm text-gray-500 mb-2">QPay-ээр төлөх</p>
-                {/* Placeholder for QPay QR Code */}
-                <div className="bg-gray-200 w-48 h-48 mx-auto flex items-center justify-center rounded-lg">
-                  <span className="text-gray-500 text-xs">QR Code Placeholder</span>
+            </TabsContent>
+            
+            <TabsContent value="bank" className="space-y-4 pt-4">
+              <div className="space-y-4 border rounded-lg p-4">
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Банк</Label>
+                  <div className="font-medium">ХААН Банк</div>
+                </div>
+                <Separator />
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Дансны дугаар</Label>
+                  <div className="flex items-center justify-between">
+                    <code className="bg-muted px-2 py-1 rounded border font-mono text-lg">5063568372</code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Хүлээн авагч</Label>
+                  <div className="font-medium">Анхбаяр (Nexa Finance)</div>
+                </div>
+                <Separator />
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-muted-foreground">Гүйлгээний утга</Label>
+                  <div className="bg-yellow-50 px-3 py-2 rounded border border-yellow-200 text-sm text-yellow-800 break-all">
+                    {user.email}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    * Гүйлгээний утга дээр бүртгэлтэй и-мэйл хаягаа заавал бичнэ үү.
+                  </p>
                 </div>
               </div>
-            </div>
 
-            <form action={async () => {
-              'use server'
-              await verifyPayment(groupId, 'QPay Payment')
-            }}>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Төлбөр шалгах
-              </button>
-            </form>
+              <div className="bg-blue-50 p-3 rounded-md flex gap-2 items-start text-blue-800 text-sm">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>Дансаар шилжүүлсэн тохиолдолд админ баталгаажуулсны дараа төлөв шинэчлэгдэнэ.</p>
+              </div>
 
-            <div className="text-center mt-4">
-              <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-900">
-                Буцах
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+              <form action={async () => {
+                'use server'
+                await submitPayment(groupId, 'bank_transfer', 'Bank transfer manual confirmation')
+              }}>
+                <Button className="w-full" size="lg" type="submit" variant="secondary">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Шилжүүлэг хийсэн
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+        </CardContent>
+      </Card>
     </div>
   )
 }
