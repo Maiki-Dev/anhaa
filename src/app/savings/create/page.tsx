@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, PiggyBank } from 'lucide-react'
 import Link from 'next/link'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export default async function CreateSavingsPage() {
   async function createSavings(formData: FormData) {
@@ -87,9 +88,9 @@ export default async function CreateSavingsPage() {
                 className="h-12 text-lg bg-background/50"
               />
             </div>
-            <Button type="submit" className="w-full h-12 text-base font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+            <SubmitButton text="Үүсгэх" className="w-full h-12 text-base font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
               Үүсгэх
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
       </Card>

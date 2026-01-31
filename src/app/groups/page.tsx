@@ -87,7 +87,7 @@ export default async function GroupsPage() {
                  <div>
                    <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">{group.name}</CardTitle>
                    <CardDescription className="mt-1">
-                      {new Date(group.created_at).toLocaleDateString()}
+                      {new Date(group.created_at).toLocaleDateString('mn-MN', { timeZone: 'Asia/Ulaanbaatar' })}
                    </CardDescription>
                  </div>
                  {myGroupIds.has(group.id) && (

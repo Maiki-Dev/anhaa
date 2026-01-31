@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { SubmitButton } from './SubmitButton'
+import { SubmitButton } from '@/components/SubmitButton'
 import { PiggyBank } from 'lucide-react'
 
 export default async function LoginPage({
@@ -68,7 +68,7 @@ export default async function LoginPage({
               </div>
             )}
 
-            <SubmitButton />
+            <SubmitButton text="Нэвтрэх" />
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 text-center text-sm bg-muted/50 py-6 border-t">

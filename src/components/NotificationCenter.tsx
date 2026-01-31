@@ -122,7 +122,20 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
                       {n.message}
                     </p>
                     <p className="text-[10px] text-muted-foreground/70">
-                      {new Date(n.created_at).toLocaleDateString('mn-MN')}
+                      {(() => {
+                        const date = new Date(n.created_at)
+                        const formatter = new Intl.DateTimeFormat('en-US', {
+                          timeZone: 'Asia/Ulaanbaatar',
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })
+                        const parts = formatter.formatToParts(date)
+                        const year = parts.find(p => p.type === 'year')?.value
+                        const month = parts.find(p => p.type === 'month')?.value
+                        const day = parts.find(p => p.type === 'day')?.value
+                        return `${year}.${month}.${day}`
+                      })()}
                     </p>
                   </div>
                   {!n.is_read && <div className="h-2 w-2 shrink-0 rounded-full bg-blue-600" />}

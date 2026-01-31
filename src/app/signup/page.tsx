@@ -1,10 +1,10 @@
 import { signup } from './actions'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { PiggyBank } from 'lucide-react'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export default async function SignupPage({
   searchParams,
@@ -90,9 +90,9 @@ export default async function SignupPage({
               </div>
             )}
 
-            <Button type="submit" className="w-full h-11 text-base shadow-lg shadow-primary/20">
+            <SubmitButton className="w-full h-11 text-base shadow-lg shadow-primary/20">
               Бүртгүүлэх
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 text-center text-sm bg-muted/50 py-6 border-t">

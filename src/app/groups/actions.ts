@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createAdminClient } from '@/utils/supabase/server'
 
 export async function createGroup(formData: FormData) {
   const supabase = await createClient()
@@ -138,7 +138,18 @@ export async function deleteGroup(groupId: string) {
     return { error: 'Unauthorized' }
   }
 
-  const { error } = await supabase
+  // Initialize admin client for bypassing RLS if key is available
+  let db = supabase
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    db = await createAdminClient()
+  }
+
+  // Delete group dependents first
+  await db.from('group_members').delete().eq('group_id', groupId)
+  await db.from('payments').delete().eq('group_id', groupId)
+  await db.from('progress').delete().eq('group_id', groupId)
+
+  const { error } = await db
     .from('groups')
     .delete()
     .eq('id', groupId)

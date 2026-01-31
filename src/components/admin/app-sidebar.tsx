@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Layers, CreditCard, Settings, PiggyBank } from "lucide-react"
+import { LayoutDashboard, Users, Layers, CreditCard, Settings, PiggyBank, Wallet } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -62,6 +62,11 @@ export function AdminSidebar() {
       title: "Groups",
       href: "/admin/groups",
       icon: Layers,
+    },
+    {
+      title: "Savings",
+      href: "/admin/savings",
+      icon: Wallet,
     },
     {
       title: "Payments",
