@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { ProfileForm } from './profile-form'
+import { SettingsProfileForm } from './profile-form'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -33,7 +33,7 @@ export default async function SettingsPage() {
           </p>
         </div>
         <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-6">
-          <ProfileForm 
+          <SettingsProfileForm 
             initialName={profile?.name || ''} 
             initialAccountNumber={profile?.account_number || ''}
             initialPhoneNumber={profile?.phone_number || ''}

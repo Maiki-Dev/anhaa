@@ -11,7 +11,8 @@ interface ProfileFormProps {
   initialAvatarUrl: string
 }
 
-export function ProfileForm({ 
+// Profile update form component
+export function SettingsProfileForm({ 
   initialName, 
   initialAccountNumber, 
   initialPhoneNumber, 
