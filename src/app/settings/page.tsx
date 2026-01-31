@@ -15,7 +15,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('name')
+    .select('name, account_number, phone_number, avatar_url')
     .eq('id', user.id)
     .single()
 
@@ -33,7 +33,12 @@ export default async function SettingsPage() {
           </p>
         </div>
         <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-6">
-          <ProfileForm initialName={profile?.name || ''} />
+          <ProfileForm 
+            initialName={profile?.name || ''} 
+            initialAccountNumber={profile?.account_number || ''}
+            initialPhoneNumber={profile?.phone_number || ''}
+            initialAvatarUrl={profile?.avatar_url || ''}
+          />
         </div>
       </div>
     </div>

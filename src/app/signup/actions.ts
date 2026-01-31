@@ -13,6 +13,7 @@ export async function signup(formData: FormData) {
   const name = formData.get('name') as string
   const loan_type = formData.get('loan_type') as string
   const account_number = formData.get('account_number') as string
+  const phone_number = formData.get('phone_number') as string
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -23,6 +24,7 @@ export async function signup(formData: FormData) {
         name,
         loan_type,
         account_number,
+        phone_number,
       },
     },
   })

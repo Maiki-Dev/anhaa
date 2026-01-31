@@ -50,6 +50,17 @@ export default async function SignupPage({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="phone_number">Утасны дугаар</Label>
+              <Input
+                id="phone_number"
+                name="phone_number"
+                type="tel"
+                placeholder="Утасны дугаар"
+                required
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="account_number">Дансны дугаар</Label>
               <Input
                 id="account_number"
