@@ -30,5 +30,11 @@ export async function GET(request: NextRequest) {
   }
 
   // redirect the user to an error page with some instructions
-  return NextResponse.redirect(new URL('/error', request.url))
+  const errorCode = searchParams.get('error_code')
+  const errorDesc = searchParams.get('error_description')
+  const errorUrl = new URL('/error', request.url)
+  if (errorCode) errorUrl.searchParams.set('code', errorCode)
+  if (errorDesc) errorUrl.searchParams.set('desc', errorDesc)
+  
+  return NextResponse.redirect(errorUrl)
 }
