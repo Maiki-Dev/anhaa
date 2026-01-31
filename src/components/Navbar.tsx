@@ -4,7 +4,7 @@ import { ThemeToggleIcon } from '@/components/ThemeToggleIcon'
 import { UserMenu } from '@/components/UserMenu'
 import { MobileMenu } from '@/components/MobileMenu'
 import { Button } from '@/components/ui/button'
-import { NotificationCenter } from '@/components/NotificationCenter'
+import { NotificationCenter, type Notification } from '@/components/NotificationCenter'
 
 export default async function Navbar() {
   const supabase = await createClient()
@@ -13,7 +13,7 @@ export default async function Navbar() {
   } = await supabase.auth.getUser()
 
   let isAdmin = false
-  let notifications: any[] = []
+  let notifications: Notification[] = []
 
   if (user) {
     const { data: profile } = await supabase

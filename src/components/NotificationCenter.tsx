@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, Check, X } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,9 +14,8 @@ import {
 import { acceptInvite, rejectInvite } from '@/app/dashboard/actions'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
-interface Notification {
+export interface Notification {
   id: string
   title: string
   message: string

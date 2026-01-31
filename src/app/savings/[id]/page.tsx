@@ -1,15 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { revalidatePath } from 'next/cache'
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { DepositSection } from './DepositSection'
 import { AddMemberForm } from './AddMemberForm'
 import { MembersList } from './MembersList'
 import { ChatSection } from './ChatSection'
+import { Wallet, Users, MessageSquare, History, PiggyBank } from 'lucide-react'
 
 export default async function SavingsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -62,25 +61,6 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
   if (!member || !account) return notFound()
 
   const totalSaved = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0
-
-  async function addDeposit(formData: FormData) {
-    'use server'
-    const amount = formData.get('amount')
-    if (!amount) return
-
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    await supabase.from('savings_transactions').insert({
-      account_id: id,
-      user_id: user.id,
-      amount: Number(amount),
-      payment_method: 'manual' // Or specific method
-    })
-
-    revalidatePath(`/savings/${id}`)
-  }
 
   async function addMember(formData: FormData): Promise<{ error?: string; success?: boolean }> {
     'use server'
@@ -143,115 +123,140 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">{account.name}</h1>
-          <p className="text-muted-foreground">Хамтын хадгаламж</p>
+    <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-full">
+            <PiggyBank className="w-8 h-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{account.name}</h1>
+            <p className="text-muted-foreground flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+              Хамтын хадгаламж
+            </p>
+          </div>
         </div>
         <div className="text-left md:text-right">
-          <p className="text-sm text-muted-foreground">Нийт хадгаламж</p>
-          <p className="text-2xl md:text-3xl font-bold text-primary">
+          <p className="text-sm font-medium text-muted-foreground">Нийт хадгаламж</p>
+          <p className="text-3xl font-bold text-primary tracking-tight">
             {new Intl.NumberFormat('mn-MN', { style: 'currency', currency: 'MNT' }).format(totalSaved)}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Deposit Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Мөнгө нэмэх</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={addDeposit} className="flex gap-4">
-              <div className="flex-1">
-                <Label htmlFor="amount" className="sr-only">Дүн</Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  placeholder="Мөнгөн дүн"
-                  required
-                  min="1"
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Main Content Area - Left Side (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          <Tabs defaultValue="chat" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="chat" className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Чат
+              </TabsTrigger>
+              <TabsTrigger value="transactions" className="flex items-center gap-2">
+                <History className="w-4 h-4" />
+                Гүйлгээний түүх
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="chat" className="mt-0">
+              <div className="h-[600px] border rounded-xl overflow-hidden shadow-sm bg-card">
+                <ChatSection 
+                  accountId={id} 
+                  initialMessages={messages || []} 
+                  currentUserId={user.id} 
                 />
               </div>
-              <Button type="submit">Нэмэх</Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Add Member Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Гишүүн нэмэх</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AddMemberForm onAddMember={addMember} />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Members List */}
-        <div className="md:col-span-1">
-          <MembersList members={members || []} />
+            </TabsContent>
+            
+            <TabsContent value="transactions" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Гүйлгээний түүх</CardTitle>
+                  <CardDescription>Сүүлийн үеийн бүх орлого зарлагын мэдээлэл</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Огноо</TableHead>
+                        <TableHead>Хэрэглэгч</TableHead>
+                        <TableHead className="text-right">Дүн</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                            Гүйлгээ хийгдээгүй байна
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        transactions?.map((t) => (
+                          <TableRow key={t.id}>
+                            <TableCell>
+                              {new Date(t.created_at).toLocaleDateString('mn-MN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </TableCell>
+                            <TableCell className="font-medium">{t.users?.name || t.users?.email}</TableCell>
+                            <TableCell className="text-right font-bold text-green-600">
+                              +{new Intl.NumberFormat('mn-MN', { style: 'decimal' }).format(Number(t.amount))}₮
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
 
-        {/* Chat Section */}
-        <div className="md:col-span-2">
-          <ChatSection 
-            accountId={id} 
-            initialMessages={messages || []} 
-            currentUserId={user.id} 
-          />
+        {/* Sidebar - Right Side (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Action Card */}
+          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+            <div className="p-4 bg-primary/5 border-b">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-primary" />
+                Түрийвч
+              </h3>
+            </div>
+            <div className="p-4">
+              <DepositSection accountId={id} />
+            </div>
+          </div>
+
+          {/* Members Card */}
+          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+            <div className="p-4 bg-secondary/30 border-b flex justify-between items-center">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Гишүүд
+              </h3>
+              <span className="text-xs font-medium bg-secondary px-2 py-0.5 rounded-full">
+                {members?.length || 0}
+              </span>
+            </div>
+            <div className="p-4 space-y-4">
+              <MembersList members={members || []} />
+              
+              <div className="pt-4 border-t">
+                <p className="text-sm font-medium mb-2 text-muted-foreground">Шинэ гишүүн урих</p>
+                <AddMemberForm onAddMember={addMember} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Transactions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Гүйлгээний түүх</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Огноо</TableHead>
-                <TableHead>Хэрэглэгч</TableHead>
-                <TableHead className="text-right">Дүн</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                    Гүйлгээ хийгдээгүй байна
-                  </TableCell>
-                </TableRow>
-              ) : (
-                transactions?.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell>
-                      {new Date(t.created_at).toLocaleDateString('mn-MN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </TableCell>
-                    <TableCell>{t.users?.name || t.users?.email}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      +{new Intl.NumberFormat('mn-MN', { style: 'currency', currency: 'MNT' }).format(t.amount)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </div>
   )
 }
