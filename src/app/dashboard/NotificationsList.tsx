@@ -31,7 +31,7 @@ export function NotificationsList({ notifications }: { notifications: Notificati
     setLoading(n.id)
     try {
       if (n.type === 'savings_invite') {
-        const result = await acceptInvite(n.id, n.data.account_id)
+        const result = await acceptInvite(n.id, n.data.account_id as string)
         if (result?.error) {
           toast.error('Алдаа гарлаа: ' + result.error)
         } else {
@@ -50,7 +50,7 @@ export function NotificationsList({ notifications }: { notifications: Notificati
     setLoading(n.id)
     try {
       if (n.type === 'savings_invite') {
-        await rejectInvite(n.id, n.data.account_id)
+        await rejectInvite(n.id, n.data.account_id as string)
         toast.success('Татгалзлаа')
       }
     } catch (e) {
