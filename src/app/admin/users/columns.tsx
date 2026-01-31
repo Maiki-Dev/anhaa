@@ -140,12 +140,14 @@ export const columns: ColumnDef<User>[] = [
     },
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("total_payment"))
+      // Use decimal style and append symbol manually to avoid server/client currency symbol mismatch (MNT vs ₮)
       const formatted = new Intl.NumberFormat("mn-MN", {
-        style: "currency",
-        currency: "MNT",
+        style: "decimal",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       }).format(amount)
  
-      return <div className="text-right font-medium">{formatted}</div>
+      return <div className="text-right font-medium">{formatted} ₮</div>
     },
   },
   {
@@ -168,7 +170,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "created_at",
     header: "Joined",
     cell: ({ row }) => {
-        return new Date(row.getValue("created_at")).toLocaleDateString('mn-MN')
+        return new Date(row.getValue("created_at")).toLocaleDateString('mn-MN', { timeZone: 'Asia/Ulaanbaatar' })
     }
   },
   {

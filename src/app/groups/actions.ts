@@ -24,6 +24,16 @@ export async function createGroup(formData: FormData) {
   const isAdmin = profile?.role === 'admin'
 
   if (!isAdmin) {
+    // Check max members limit
+    if (max_members > 20) {
+      return { error: 'Гишүүдийн тоо 20-оос хэтрэхгүй байх ёстой' }
+    }
+
+    // Check monthly contribution limit
+    if (monthly_contribution > 50000) {
+      return { error: 'Хураамжийн хэмжээ 50,000-аас хэтрэхгүй байх ёстой' }
+    }
+
     // Check how many groups the user has created
     // Note: This assumes created_by column exists. If not, this check might fail or return 0.
     // The user should run the migration SQL provided.
@@ -63,7 +73,7 @@ export async function joinGroup(groupId: string) {
   // 1. Check if group is full
   const { data: group, error: groupError } = await supabase
     .from('groups')
-    .select('max_members, group_members(count)')
+    .select('max_members, group_members(count), created_by, name')
     .eq('id', groupId)
     .single()
   

@@ -19,9 +19,10 @@ import { toast } from 'sonner'
 
 interface CreateGroupDialogProps {
   canCreate: boolean
+  isAdmin: boolean
 }
 
-export function CreateGroupDialog({ canCreate }: CreateGroupDialogProps) {
+export function CreateGroupDialog({ canCreate, isAdmin }: CreateGroupDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -93,6 +94,18 @@ export function CreateGroupDialog({ canCreate }: CreateGroupDialogProps) {
                   placeholder="50,000"
                   className="pl-8"
                   required
+                  max={isAdmin ? undefined : 50000}
+                  onInvalid={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.validity.rangeOverflow && !isAdmin) {
+                      target.setCustomValidity("Хураамж 50,000-аас ихгүй байх ёстой");
+                    } else if (target.validity.valueMissing) {
+                      target.setCustomValidity("Хураамжийн дүнг оруулна уу");
+                    }
+                  }}
+                  onInput={(e) => {
+                    (e.target as HTMLInputElement).setCustomValidity("");
+                  }}
                 />
                 <span className="absolute left-3 top-2.5 text-muted-foreground">₮</span>
               </div>
@@ -105,9 +118,24 @@ export function CreateGroupDialog({ canCreate }: CreateGroupDialogProps) {
                 id="max_members"
                 name="max_members"
                 type="number"
-                placeholder="12"
+                placeholder="20 хүртэл"
                 className="col-span-3"
+                min={1}
+                max={isAdmin ? undefined : 20}
                 required
+                onInvalid={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  if (target.validity.rangeOverflow && !isAdmin) {
+                    target.setCustomValidity("Гишүүдийн тоо 20-оос ихгүй байх ёстой");
+                  } else if (target.validity.rangeUnderflow) {
+                    target.setCustomValidity("Гишүүдийн тоо 1-ээс багагүй байх ёстой");
+                  } else if (target.validity.valueMissing) {
+                    target.setCustomValidity("Гишүүдийн тоог оруулна уу");
+                  }
+                }}
+                onInput={(e) => {
+                  (e.target as HTMLInputElement).setCustomValidity("");
+                }}
               />
             </div>
           </div>

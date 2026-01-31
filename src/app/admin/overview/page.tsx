@@ -35,7 +35,7 @@ export default async function OverviewPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue.toLocaleString()}₮</div>
+            <div className="text-2xl font-bold">{totalRevenue.toLocaleString('mn-MN')}₮</div>
             <p className="text-xs text-muted-foreground">
               Системийн нийт орлого
             </p>

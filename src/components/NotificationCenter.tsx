@@ -67,6 +67,13 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
     }
   }
 
+  async function handleMarkAsRead(n: Notification) {
+    if (n.is_read) return
+    // Here you would implement the mark as read logic
+    // For now we just console log
+    console.log('Marking as read:', n.id)
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -95,7 +102,17 @@ export function NotificationCenter({ notifications }: { notifications: Notificat
         ) : (
           <div className="max-h-[300px] overflow-y-auto">
             {notifications.map((n) => (
-              <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 p-3 cursor-default focus:bg-accent/50">
+              <DropdownMenuItem 
+                key={n.id} 
+                className="flex flex-col items-start gap-1 p-3 cursor-default focus:bg-accent/50"
+                onSelect={(e) => {
+                  if (n.type !== 'savings_invite') {
+                    handleMarkAsRead(n)
+                  } else {
+                    e.preventDefault()
+                  }
+                }}
+              >
                 <div className="flex w-full items-start justify-between gap-2">
                   <div className="flex-1 space-y-1">
                     <p className={`text-sm font-medium leading-none ${!n.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>

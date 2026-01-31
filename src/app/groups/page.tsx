@@ -73,7 +73,7 @@ export default async function GroupsPage() {
               Санхүүгийн зорилгоо биелүүлэхэд тань туслах бүлгүүдтэй нэгдээрэй.
             </p>
           </div>
-          <CreateGroupDialog canCreate={canCreate} />
+          <CreateGroupDialog canCreate={canCreate} isAdmin={isAdmin} />
         </div>
       </div>
 
