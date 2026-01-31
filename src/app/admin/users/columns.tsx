@@ -42,6 +42,7 @@ export type User = {
   total_payment: number
   groups: string[]
   account_number: string
+  phone_number: string
 }
 
 const ActionsCell = ({ user }: { user: User }) => {
@@ -51,6 +52,7 @@ const ActionsCell = ({ user }: { user: User }) => {
         name: user.name || '',
         loan_type: user.loan_type || 'bank',
         account_number: user.account_number || '',
+        phone_number: user.phone_number || '',
         email: user.email || ''
     })
 
@@ -177,6 +179,14 @@ const ActionsCell = ({ user }: { user: User }) => {
                     />
                 </div>
                 <div className="space-y-2">
+                    <Label htmlFor="phone_number">Phone Number</Label>
+                    <Input 
+                        id="phone_number" 
+                        value={editForm.phone_number} 
+                        onChange={(e) => setEditForm({...editForm, phone_number: e.target.value})}
+                    />
+                </div>
+                <div className="space-y-2">
                     <Label htmlFor="loan_type">Loan Type</Label>
                     <div className="relative">
                         <select
@@ -273,6 +283,11 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "account_number",
     header: "Account No",
     cell: ({ row }) => row.getValue("account_number") || "-",
+  },
+  {
+    accessorKey: "phone_number",
+    header: "Phone No",
+    cell: ({ row }) => row.getValue("phone_number") || "-",
   },
   {
     accessorKey: "created_at",

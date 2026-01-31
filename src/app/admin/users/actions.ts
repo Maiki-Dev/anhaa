@@ -134,7 +134,7 @@ export async function updateUserRole(userId: string, newRole: string) {
   return { success: true }
 }
 
-export async function updateUser(userId: string, data: { name?: string, loan_type?: string, account_number?: string, email?: string }) {
+export async function updateUser(userId: string, data: { name?: string, loan_type?: string, account_number?: string, phone_number?: string, email?: string }) {
   const supabase = await createClient()
   
   // Check if current user is admin
@@ -166,6 +166,7 @@ export async function updateUser(userId: string, data: { name?: string, loan_typ
         ...(data.name && { name: data.name }),
         ...(data.loan_type && { loan_type: data.loan_type }),
         ...(data.account_number && { account_number: data.account_number }),
+        ...(data.phone_number && { phone_number: data.phone_number }),
         // Email update in public table (usually handled via trigger from auth, but admin might force sync)
         ...(data.email && { email: data.email }) 
     })
@@ -175,16 +176,29 @@ export async function updateUser(userId: string, data: { name?: string, loan_typ
     return { error: error.message }
   }
   
-  // If email is changed, we should try to update it in Auth as well if we have admin rights
-  if (data.email && supabaseAdmin) {
+  // If email or phone is changed, we should try to update it in Auth as well if we have admin rights
+  if ((data.email || data.phone_number) && supabaseAdmin) {
+      const authUpdate: any = {}
+      if (data.email) authUpdate.email = data.email
+      if (data.phone_number) authUpdate.phone = data.phone_number
+      // Also update user metadata
+      if (data.name || data.account_number || data.phone_number || data.loan_type) {
+        authUpdate.user_metadata = {
+            ...(data.name && { name: data.name }),
+            ...(data.loan_type && { loan_type: data.loan_type }),
+            ...(data.account_number && { account_number: data.account_number }),
+            ...(data.phone_number && { phone_number: data.phone_number }),
+        }
+      }
+
       const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
         userId,
-        { email: data.email }
+        authUpdate
       )
       if (authError) {
-          console.error("Failed to update email in Auth:", authError)
+          console.error("Failed to update Auth data:", authError)
           // We don't fail the whole request, but warn. 
-          return { error: `Profile updated but Auth Email update failed: ${authError.message}` }
+          return { error: `Profile updated but Auth update failed: ${authError.message}` }
       }
   }
 

@@ -42,6 +42,7 @@ export default async function UsersPage() {
       total_payment: totalPayment,
       groups: userGroups,
       account_number: user.account_number,
+      phone_number: user.phone_number,
     }
   })
 
