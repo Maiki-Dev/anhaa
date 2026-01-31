@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Layers, CreditCard, Settings } from "lucide-react"
+import { LayoutDashboard, Users, Layers, CreditCard, Settings, PiggyBank } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -26,22 +26,22 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
       )}
       {...props}
     >
-      {items.map((item) => (
-        <Button
-          key={item.href}
-          variant={pathname === item.href ? "secondary" : "ghost"}
-          className={cn(
-            "justify-start",
-            pathname === item.href && "bg-muted hover:bg-muted"
-          )}
-          asChild
-        >
-          <Link href={item.href}>
-            <item.icon className="mr-2 h-4 w-4" />
+      {items.map((item) => {
+        const isActive = pathname === item.href
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+              isActive ? "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary" : "text-muted-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
             {item.title}
           </Link>
-        </Button>
-      ))}
+        )
+      })}
     </nav>
   )
 }
@@ -76,10 +76,11 @@ export function AdminSidebar() {
   ]
 
   return (
-    <aside className="hidden w-64 flex-col border-r bg-background lg:flex">
+    <aside className="hidden w-64 flex-col border-r bg-background/50 backdrop-blur-xl lg:flex">
       <div className="flex h-16 items-center border-b px-6">
-        <Link href="/" className="flex items-center font-bold">
-          <span className="text-xl">Admin Console</span>
+        <Link href="/" className="flex items-center gap-2 font-bold">
+          <PiggyBank className="h-6 w-6 text-primary" />
+          <span className="text-lg">Admin</span>
         </Link>
       </div>
       <div className="flex-1 overflow-auto py-6 px-4">

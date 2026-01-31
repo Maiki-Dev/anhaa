@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { GroupActions } from './GroupActions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Layers } from 'lucide-react'
 
 export default async function AdminGroupsPage() {
   const supabase = await createClient()
@@ -33,15 +34,17 @@ export default async function AdminGroupsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Бүлгүүдийн удирдлага</h2>
-        <p className="text-muted-foreground">Бүх бүлгүүдийг хянах, устгах</p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Бүлгүүд ({groups?.length || 0})</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
+          <div className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-base font-medium">Бүх бүлгүүд ({groups?.length || 0})</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -58,11 +61,20 @@ export default async function AdminGroupsPage() {
               {groups?.map((group) => (
                 <TableRow key={group.id}>
                   <TableCell className="font-medium">{group.name}</TableCell>
-                  <TableCell>{group.monthly_contribution.toLocaleString()}₮</TableCell>
-                  <TableCell>{group.max_members}</TableCell>
-                  <TableCell>{new Date(group.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{group.monthly_contribution.toLocaleString('mn-MN')}₮</TableCell>
+                  <TableCell>
+                    <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                      {group.max_members}
+                    </div>
+                  </TableCell>
+                  <TableCell>{new Date(group.created_at).toLocaleDateString('mn-MN', { timeZone: 'Asia/Ulaanbaatar' })}</TableCell>
                   <TableCell className="text-right">
-                    <GroupActions groupId={group.id} groupName={group.name} />
+                    <GroupActions 
+                      groupId={group.id} 
+                      groupName={group.name} 
+                      contribution={group.monthly_contribution}
+                      maxMembers={group.max_members}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

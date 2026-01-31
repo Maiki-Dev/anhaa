@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Trash, Shield, ShieldAlert, ShieldCheck } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
+import { deleteUser, updateUserRole } from "./actions"
+import { toast } from "sonner"
+import { useState } from "react"
 
 export type User = {
   id: string
@@ -20,6 +28,78 @@ export type User = {
   created_at: string
   total_payment: number
   groups: string[]
+}
+
+const ActionsCell = ({ user }: { user: User }) => {
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleDelete = async () => {
+        if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return
+
+        setIsLoading(true)
+        const result = await deleteUser(user.id)
+        setIsLoading(false)
+
+        if (result.error) {
+            toast.error(result.error)
+        } else {
+            toast.success("User deleted successfully")
+        }
+    }
+
+    const handleRoleUpdate = async (newRole: string) => {
+        setIsLoading(true)
+        const result = await updateUserRole(user.id, newRole)
+        setIsLoading(false)
+
+        if (result.error) {
+            toast.error(result.error)
+        } else {
+            toast.success(`Role updated to ${newRole}`)
+        }
+    }
+
+    return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(user.id)
+                toast.success("User ID copied")
+              }}
+            >
+              Copy user ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Shield className="mr-2 h-4 w-4" />
+                Change Role
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={user.role} onValueChange={handleRoleUpdate}>
+                  <DropdownMenuRadioItem value="user">User</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete User
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+    )
 }
 
 export const columns: ColumnDef<User>[] = [
@@ -65,7 +145,7 @@ export const columns: ColumnDef<User>[] = [
         currency: "MNT",
       }).format(amount)
  
-      return <div className="font-medium">{formatted}</div>
+      return <div className="text-right font-medium">{formatted}</div>
     },
   },
   {
@@ -88,35 +168,11 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "created_at",
     header: "Joined",
     cell: ({ row }) => {
-        return new Date(row.getValue("created_at")).toLocaleDateString()
+        return new Date(row.getValue("created_at")).toLocaleDateString('mn-MN')
     }
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const user = row.original
- 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(user.id)}
-            >
-              Copy user ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    cell: ({ row }) => <ActionsCell user={row.original} />,
   },
 ]

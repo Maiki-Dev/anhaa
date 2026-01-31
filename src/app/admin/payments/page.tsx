@@ -10,6 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PaymentActions } from "./PaymentActions"
+import { CreditCard } from "lucide-react"
 
 interface PaymentWithRelations {
   id: string
@@ -65,13 +66,16 @@ export default async function AdminPaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Төлбөрүүд</h2>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Сүүлийн гүйлгээнүүд</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-base font-medium">Сүүлийн гүйлгээнүүд</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -91,7 +95,7 @@ export default async function AdminPaymentsPage() {
                 payments.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell>
-                      {new Date(payment.created_at).toLocaleDateString('mn-MN')}
+                      {new Date(payment.created_at).toLocaleDateString('mn-MN', { timeZone: 'Asia/Ulaanbaatar' })}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
@@ -100,12 +104,17 @@ export default async function AdminPaymentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>{payment.groups?.name}</TableCell>
-                    <TableCell>{payment.amount?.toLocaleString()}₮</TableCell>
+                    <TableCell className="font-medium">{payment.amount?.toLocaleString('mn-MN')}₮</TableCell>
                     <TableCell>
                       {getStatusBadge(payment.status)}
                     </TableCell>
                     <TableCell>
-                      <PaymentActions paymentId={payment.id} status={payment.status} />
+                      <PaymentActions 
+                        paymentId={payment.id} 
+                        status={payment.status} 
+                        amount={payment.amount}
+                        note={payment.note}
+                      />
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
                       {payment.note}
@@ -114,7 +123,7 @@ export default async function AdminPaymentsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Төлбөрийн мэдээлэл олдсонгүй
                   </TableCell>
                 </TableRow>
