@@ -84,8 +84,10 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
 
   async function addMember(formData: FormData): Promise<{ error?: string; success?: boolean }> {
     'use server'
-    const email = formData.get('email') as string
-    if (!email) return { error: 'Имэйл оруулна уу' }
+    const rawEmail = formData.get('email') as string
+    if (!rawEmail) return { error: 'Имэйл оруулна уу' }
+    
+    const email = rawEmail.trim().toLowerCase()
 
     const supabase = await createClient()
     
@@ -93,7 +95,7 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
     const { data: foundUser } = await supabase
       .from('users')
       .select('id')
-      .eq('email', email)
+      .ilike('email', email)
       .single()
     
     if (!foundUser) {

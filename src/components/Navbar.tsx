@@ -4,6 +4,7 @@ import { ThemeToggleIcon } from '@/components/ThemeToggleIcon'
 import { UserMenu } from '@/components/UserMenu'
 import { MobileMenu } from '@/components/MobileMenu'
 import { Button } from '@/components/ui/button'
+import { NotificationCenter } from '@/components/NotificationCenter'
 
 export default async function Navbar() {
   const supabase = await createClient()
@@ -12,6 +13,8 @@ export default async function Navbar() {
   } = await supabase.auth.getUser()
 
   let isAdmin = false
+  let notifications: any[] = []
+
   if (user) {
     const { data: profile } = await supabase
       .from('users')
@@ -19,6 +22,15 @@ export default async function Navbar() {
       .eq('id', user.id)
       .single()
     isAdmin = profile?.role === 'admin'
+
+    const { data: notifs } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    
+    if (notifs) notifications = notifs
   }
 
   return (
@@ -59,6 +71,7 @@ export default async function Navbar() {
 
           <div className="flex items-center gap-4">
             <ThemeToggleIcon />
+            {user && <NotificationCenter notifications={notifications} />}
             {user ? (
               <UserMenu isAdmin={isAdmin} />
             ) : (
