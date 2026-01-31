@@ -38,6 +38,7 @@ export function DataTable<TData, TValue>({
     []
   )
 
+  // eslint-disable-next-line
   const table = useReactTable({
     data,
     columns,

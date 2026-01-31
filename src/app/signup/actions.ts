@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/server'
+import { getURL } from '@/utils/get-url'
 
 export async function signup(formData: FormData) {
   const supabase = await createClient()
@@ -17,6 +18,7 @@ export async function signup(formData: FormData) {
     email,
     password,
     options: {
+      emailRedirectTo: `${getURL()}auth/callback`,
       data: {
         name,
         loan_type,
