@@ -11,11 +11,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PaymentActions } from "./PaymentActions"
 
+interface PaymentWithRelations {
+  id: string
+  created_at: string
+  amount: number
+  status: string
+  note: string | null
+  users: {
+    name: string | null
+    email: string | null
+  } | null
+  groups: {
+    name: string
+  } | null
+}
+
 export default async function AdminPaymentsPage() {
   const supabase = await createClient()
 
   // Fetch payments from payments table
-  const { data: payments, error } = await supabase
+  const { data: rawPayments, error } = await supabase
     .from('payments')
     .select(`
       *,
@@ -33,6 +48,8 @@ export default async function AdminPaymentsPage() {
     console.error('Error fetching payments:', error)
     return <div>Error loading payments</div>
   }
+
+  const payments = rawPayments as unknown as PaymentWithRelations[]
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -71,7 +88,7 @@ export default async function AdminPaymentsPage() {
             </TableHeader>
             <TableBody>
               {payments && payments.length > 0 ? (
-                payments.map((payment: any) => (
+                payments.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell>
                       {new Date(payment.created_at).toLocaleDateString('mn-MN')}

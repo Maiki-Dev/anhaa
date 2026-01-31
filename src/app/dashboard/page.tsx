@@ -1,7 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { markAsPaid } from './actions'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -69,11 +68,11 @@ export default async function Dashboard() {
   ])
 
   const hasPaidThisMonth = (groupId: string) => {
-    return progress?.some((p: any) => p.group_id === groupId && p.paid)
+    return progress?.some((p: { group_id: string; paid: boolean }) => p.group_id === groupId && p.paid)
   }
 
   const hasPendingPayment = (groupId: string) => {
-    return payments?.some((p: any) => p.group_id === groupId && p.status === 'pending')
+    return payments?.some((p: { group_id: string; status: string }) => p.group_id === groupId && p.status === 'pending')
   }
 
   const getLoanTypeName = (type: string) => {
@@ -146,7 +145,7 @@ export default async function Dashboard() {
         
         {myGroups && myGroups.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {myGroups.map((member: any) => {
+            {myGroups.map((member: { group_id: string; groups: { name: string; monthly_contribution: number } }) => {
               const paid = hasPaidThisMonth(member.group_id)
               const pending = hasPendingPayment(member.group_id)
               

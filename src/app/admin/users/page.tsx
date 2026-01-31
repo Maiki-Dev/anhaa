@@ -26,7 +26,7 @@ export default async function UsersPage() {
 
     const userGroups = groupMembers
       ?.filter((m) => m.user_id === user.id)
-      // @ts-ignore
+      // @ts-expect-error - Supabase type inference for nested relations can be tricky
       .map((m) => m.groups?.name)
       .filter(Boolean) || []
 

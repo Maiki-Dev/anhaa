@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus } from 'lucide-react'
 import { revalidatePath } from 'next/cache'
 
 import { AddMemberForm } from './AddMemberForm'
+import { MembersList } from './MembersList'
+import { ChatSection } from './ChatSection'
 
 export default async function SavingsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,37 +18,48 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
 
   if (!user) return notFound()
 
-  // Verify membership
-  const { data: member } = await supabase
-    .from('savings_members')
-    .select('id')
-    .eq('account_id', id)
-    .eq('user_id', user.id)
-    .single()
+  // Verify membership and fetch initial data in parallel
+  const [
+    { data: member },
+    { data: account },
+    { data: transactions },
+    { data: members },
+    { data: messages }
+  ] = await Promise.all([
+    supabase
+      .from('savings_members')
+      .select('id')
+      .eq('account_id', id)
+      .eq('user_id', user.id)
+      .single(),
+    supabase
+      .from('savings_accounts')
+      .select('*')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('savings_transactions')
+      .select(`
+        *,
+        users (
+          name,
+          email
+        )
+      `)
+      .eq('account_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('savings_members')
+      .select('*, users(name, email)')
+      .eq('account_id', id),
+    supabase
+      .from('savings_messages')
+      .select('*, users(name)')
+      .eq('account_id', id)
+      .order('created_at', { ascending: true })
+  ])
 
-  if (!member) return notFound()
-
-  // Fetch account details
-  const { data: account } = await supabase
-    .from('savings_accounts')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (!account) return notFound()
-
-  // Fetch transactions with user details
-  const { data: transactions } = await supabase
-    .from('savings_transactions')
-    .select(`
-      *,
-      users (
-        name,
-        email
-      )
-    `)
-    .eq('account_id', id)
-    .order('created_at', { ascending: false })
+  if (!member || !account) return notFound()
 
   const totalSaved = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0
 
@@ -176,6 +188,22 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
             <AddMemberForm onAddMember={addMember} />
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Members List */}
+        <div className="md:col-span-1">
+          <MembersList members={members || []} />
+        </div>
+
+        {/* Chat Section */}
+        <div className="md:col-span-2">
+          <ChatSection 
+            accountId={id} 
+            initialMessages={messages || []} 
+            currentUserId={user.id} 
+          />
+        </div>
       </div>
 
       {/* Transactions List */}

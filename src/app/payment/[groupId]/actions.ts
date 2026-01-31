@@ -62,7 +62,7 @@ export async function submitPayment(groupId: string, method: 'qpay' | 'bank_tran
      const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
      
      // First try to update
-     const { data: progress, error: fetchError } = await supabase
+     const { data: progress } = await supabase
         .from('progress')
         .select('*')
         .eq('user_id', user.id)

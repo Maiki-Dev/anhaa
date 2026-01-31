@@ -25,7 +25,16 @@ export default async function SavingsPage() {
 
   const accountIds = members?.map(m => m.account_id) || []
 
-  let accounts: any[] = []
+  interface SavingsAccount {
+    id: string
+    name: string
+    created_at: string
+    savings_transactions: {
+      amount: number
+    }[]
+  }
+
+  let accounts: SavingsAccount[] = []
   if (accountIds.length > 0) {
     const { data: savingsAccounts } = await supabase
       .from('savings_accounts')
@@ -71,7 +80,7 @@ export default async function SavingsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {accounts.map((account) => {
-            const totalSaved = account.savings_transactions?.reduce((sum: number, t: any) => sum + Number(t.amount), 0) || 0
+            const totalSaved = account.savings_transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0
             
             return (
               <Card key={account.id} className="hover:shadow-lg transition-shadow">

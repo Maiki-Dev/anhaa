@@ -1,7 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { ProfileForm } from './profile-form'
-import { ThemeToggle } from './theme-toggle'
 
 export default async function SettingsPage() {
   const supabase = await createClient()

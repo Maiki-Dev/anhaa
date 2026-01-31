@@ -25,7 +25,7 @@ export default async function GroupsPage() {
     .select('group_id')
     .eq('user_id', user.id)
 
-  const myGroupIds = new Set(myMemberships?.map((m: any) => m.group_id))
+  const myGroupIds = new Set(myMemberships?.map((m) => m.group_id))
 
   return (
     <div className="space-y-6">
@@ -93,7 +93,7 @@ export default async function GroupsPage() {
 
       {/* Groups List */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {groups?.map((group: any) => (
+        {groups?.map((group) => (
           <div key={group.id} className="bg-white overflow-hidden shadow rounded-lg flex flex-col justify-between">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>

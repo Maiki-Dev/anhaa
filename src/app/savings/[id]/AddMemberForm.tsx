@@ -28,7 +28,7 @@ export function AddMemberForm({ onAddMember }: AddMemberFormProps) {
         form?.reset()
         // Optional: show success message or just rely on optimistic update/revalidate
       }
-    } catch (e) {
+    } catch {
       setError('Алдаа гарлаа')
     } finally {
       setLoading(false)

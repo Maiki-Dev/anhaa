@@ -13,7 +13,7 @@ interface Notification {
   title: string
   message: string
   type: string
-  data: any
+  data: Record<string, unknown>
   is_read: boolean
   created_at: string
 }

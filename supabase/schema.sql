@@ -66,6 +66,7 @@ create table if not exists savings_members (
   id uuid default uuid_generate_v4() primary key,
   account_id uuid references savings_accounts(id) on delete cascade not null,
   user_id uuid references users(id) on delete cascade not null,
+  status text default 'active', -- active, invited, rejected
   joined_at timestamp with time zone default timezone('utc'::text, now()) not null,
   unique(account_id, user_id)
 );
@@ -79,6 +80,27 @@ create table if not exists savings_transactions (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 7. SAVINGS MESSAGES Table (New)
+create table if not exists savings_messages (
+  id uuid default uuid_generate_v4() primary key,
+  account_id uuid references savings_accounts(id) on delete cascade not null,
+  user_id uuid references users(id) on delete cascade not null,
+  content text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 8. NOTIFICATIONS Table (New)
+create table if not exists notifications (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references users(id) on delete cascade not null,
+  type text not null,
+  title text not null,
+  message text not null,
+  data jsonb,
+  is_read boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 
 -- Row Level Security (RLS)
 alter table users enable row level security;
@@ -89,6 +111,8 @@ alter table payments enable row level security;
 alter table savings_accounts enable row level security;
 alter table savings_members enable row level security;
 alter table savings_transactions enable row level security;
+alter table savings_messages enable row level security;
+alter table notifications enable row level security;
 
 -- Policies
 
@@ -163,6 +187,7 @@ create policy "Creators can add members." on savings_members for insert to authe
     and created_by = auth.uid()
   )
 );
+create policy "Anyone can update savings members." on savings_members for update using (true);
 
 create policy "Savings transactions viewable by members." on savings_transactions for select using (
   account_id in (select get_my_savings_account_ids())
@@ -171,6 +196,18 @@ create policy "Members can insert savings transactions." on savings_transactions
   account_id in (select get_my_savings_account_ids())
 );
 
+-- Savings Messages Policies
+create policy "Savings messages viewable by members." on savings_messages for select using (
+  account_id in (select get_my_savings_account_ids())
+);
+create policy "Members can insert savings messages." on savings_messages for insert with check (
+  account_id in (select get_my_savings_account_ids())
+);
+
+-- Notifications Policies
+create policy "Users can view own notifications." on notifications for select using (auth.uid() = user_id);
+create policy "Users can update own notifications." on notifications for update using (auth.uid() = user_id);
+create policy "Anyone can insert notifications." on notifications for insert with check (true);
 
 -- Trigger to create user profile on signup
 create or replace function public.handle_new_user()
@@ -182,6 +219,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
