@@ -1,9 +1,9 @@
 import { login } from './actions'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { SubmitButton } from './SubmitButton'
 
 export default async function LoginPage({
   searchParams,
@@ -21,7 +21,7 @@ export default async function LoginPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form className="space-y-4" action={login}>
             <div className="space-y-2">
               <Label htmlFor="email">И-мэйл хаяг</Label>
               <Input
@@ -53,9 +53,7 @@ export default async function LoginPage({
               </div>
             )}
 
-            <Button formAction={login} className="w-full">
-              Нэвтрэх
-            </Button>
+            <SubmitButton />
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">

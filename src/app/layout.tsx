@@ -1,8 +1,11 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { Toaster } from 'sonner'
 import './globals.css'
 import { AppNavbar } from '@/components/layout/AppNavbar'
 import Navbar from '@/components/Navbar'
+import { NavbarSkeleton } from '@/components/NavbarSkeleton'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -27,11 +30,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppNavbar>
-            <Navbar />
+            <Suspense fallback={<NavbarSkeleton />}>
+              <Navbar />
+            </Suspense>
           </AppNavbar>
           <main className="min-h-screen">
             {children}
           </main>
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>

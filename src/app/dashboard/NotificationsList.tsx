@@ -33,13 +33,14 @@ export function NotificationsList({ notifications }: { notifications: Notificati
       if (n.type === 'savings_invite') {
         const result = await acceptInvite(n.id, n.data.account_id)
         if (result?.error) {
-          alert('Алдаа гарлаа: ' + result.error)
+          toast.error('Алдаа гарлаа: ' + result.error)
         } else {
-          // Success
+          toast.success('Амжилттай нэгдлээ')
         }
       }
     } catch (e) {
       console.error(e)
+      toast.error('Сүлжээний алдаа гарлаа')
     } finally {
       setLoading(null)
     }
@@ -50,9 +51,11 @@ export function NotificationsList({ notifications }: { notifications: Notificati
     try {
       if (n.type === 'savings_invite') {
         await rejectInvite(n.id, n.data.account_id)
+        toast.success('Татгалзлаа')
       }
     } catch (e) {
       console.error(e)
+      toast.error('Алдаа гарлаа')
     } finally {
       setLoading(null)
     }
@@ -69,9 +72,9 @@ export function NotificationsList({ notifications }: { notifications: Notificati
       <CardContent className="space-y-4">
         {unreadNotifications.map((n) => (
           <div key={n.id} className="flex items-start justify-between bg-white p-3 rounded-lg border shadow-sm">
-            <div className="space-y-1">
-              <p className="font-medium text-sm">{n.title}</p>
-              <p className="text-sm text-muted-foreground">{n.message}</p>
+            <div className="space-y-1 flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">{n.title}</p>
+              <p className="text-sm text-muted-foreground break-words">{n.message}</p>
             </div>
             <div className="flex gap-2 shrink-0 ml-4">
               {n.type === 'savings_invite' && (

@@ -60,7 +60,7 @@ export function UserMenu({ isAdmin }: { isAdmin?: boolean }) {
           
           {isAdmin && (
             <Link
-              href="/admin/dashboard"
+              href="/admin"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600"
               role="menuitem"
               tabIndex={-1}

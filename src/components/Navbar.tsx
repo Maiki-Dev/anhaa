@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { ThemeToggleIcon } from '@/components/ThemeToggleIcon'
 import { UserMenu } from '@/components/UserMenu'
+import { MobileMenu } from '@/components/MobileMenu'
 import { Button } from '@/components/ui/button'
 
 export default async function Navbar() {
@@ -25,6 +26,7 @@ export default async function Navbar() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
+            {user && <MobileMenu isAdmin={isAdmin} />}
             <Link href={user ? '/dashboard' : '/'} className="flex items-center space-x-2">
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
                 Nexa Finance

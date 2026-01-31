@@ -129,15 +129,15 @@ export default async function SavingsDetailPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-4 md:p-6 space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{account.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">{account.name}</h1>
           <p className="text-muted-foreground">Хамтын хадгаламж</p>
         </div>
-        <div className="text-right">
+        <div className="text-left md:text-right">
           <p className="text-sm text-muted-foreground">Нийт хадгаламж</p>
-          <p className="text-3xl font-bold text-primary">
+          <p className="text-2xl md:text-3xl font-bold text-primary">
             {new Intl.NumberFormat('mn-MN', { style: 'currency', currency: 'MNT' }).format(totalSaved)}
           </p>
         </div>

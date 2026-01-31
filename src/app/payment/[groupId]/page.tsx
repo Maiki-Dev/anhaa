@@ -46,7 +46,7 @@ export default async function PaymentPage({
   }
 
   return (
-    <div className="container max-w-lg mx-auto py-12">
+    <div className="container max-w-lg mx-auto py-6 md:py-12 px-4">
       <Card className="w-full shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Төлбөр төлөх</CardTitle>

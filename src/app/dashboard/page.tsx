@@ -19,49 +19,58 @@ export default async function Dashboard() {
     redirect('/login')
   }
 
-  // Fetch user profile
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  // Fetch user's groups
-  const { data: myGroups } = await supabase
-    .from('group_members')
-    .select('*, groups(*)')
-    .eq('user_id', user.id)
-
-  // Fetch this month's progress
+  // Parallel Data Fetching
   const currentMonth = new Date().toISOString().slice(0, 7)
-  const { data: progress } = await supabase
-    .from('progress')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('month', currentMonth)
+  const startOfMonth = `${currentMonth}-01`
+  const endOfMonth = `${currentMonth}-31`
+
+  const [
+    { data: profile },
+    { data: myGroups },
+    { data: progress },
+    { data: payments },
+    { data: notifications }
+  ] = await Promise.all([
+    // Fetch user profile
+    supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single(),
+
+    // Fetch user's groups
+    supabase
+      .from('group_members')
+      .select('*, groups(*)')
+      .eq('user_id', user.id),
+
+    // Fetch this month's progress
+    supabase
+      .from('progress')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('month', currentMonth),
+
+    // Fetch this month's payments (to check for pending)
+    supabase
+      .from('payments')
+      .select('group_id, status')
+      .eq('user_id', user.id)
+      .gte('created_at', startOfMonth)
+      .lte('created_at', endOfMonth),
+
+    // Fetch notifications
+    supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+  ])
 
   const hasPaidThisMonth = (groupId: string) => {
     return progress?.some((p: any) => p.group_id === groupId && p.paid)
   }
-
-  // Fetch this month's payments (to check for pending)
-  const startOfMonth = `${currentMonth}-01`
-  const endOfMonth = `${currentMonth}-31`
-  
-  const { data: payments } = await supabase
-    .from('payments')
-    .select('group_id, status')
-    .eq('user_id', user.id)
-    .gte('created_at', startOfMonth)
-    .lte('created_at', endOfMonth)
-
-  // Fetch notifications
-  const { data: notifications } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_read', false)
-    .order('created_at', { ascending: false })
 
   const hasPendingPayment = (groupId: string) => {
     return payments?.some((p: any) => p.group_id === groupId && p.status === 'pending')
