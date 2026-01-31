@@ -5,6 +5,7 @@ import { UserMenu } from '@/components/UserMenu'
 import { MobileMenu } from '@/components/MobileMenu'
 import { Button } from '@/components/ui/button'
 import { NotificationCenter, type Notification } from '@/components/NotificationCenter'
+import { PiggyBank } from 'lucide-react'
 
 export default async function Navbar() {
   const supabase = await createClient()
@@ -40,6 +41,7 @@ export default async function Navbar() {
           <div className="flex items-center gap-2">
             {user && <MobileMenu isAdmin={isAdmin} />}
             <Link href={user ? '/dashboard' : '/'} className="flex items-center space-x-2">
+              <PiggyBank className="h-6 w-6 text-primary" />
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
                 Nexa Finance
               </span>

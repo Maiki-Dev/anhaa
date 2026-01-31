@@ -17,6 +17,7 @@ create table groups (
   name text not null,
   monthly_contribution numeric not null,
   max_members int not null,
+  created_by uuid references users(id),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

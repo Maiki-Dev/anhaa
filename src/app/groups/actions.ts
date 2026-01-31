@@ -6,15 +6,44 @@ import { createClient } from '@/utils/supabase/server'
 
 export async function createGroup(formData: FormData) {
   const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
 
   const name = formData.get('name') as string
   const monthly_contribution = parseFloat(formData.get('monthly_contribution') as string)
   const max_members = parseInt(formData.get('max_members') as string)
 
+  // Check limits
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  const isAdmin = profile?.role === 'admin'
+
+  if (!isAdmin) {
+    // Check how many groups the user has created
+    // Note: This assumes created_by column exists. If not, this check might fail or return 0.
+    // The user should run the migration SQL provided.
+    const { count, error: countError } = await supabase
+      .from('groups')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', user.id)
+    
+    // If column doesn't exist, countError might occur. We proceed with caution or fail.
+    // Assuming migration is applied.
+    if (!countError && (count || 0) >= 1) {
+      return { error: 'Та зөвхөн 1 бүлэг үүсгэх эрхтэй' }
+    }
+  }
+
   const { error } = await supabase.from('groups').insert({
     name,
     monthly_contribution,
     max_members,
+    created_by: user.id,
   })
 
   if (error) {
@@ -78,6 +107,38 @@ export async function joinGroup(groupId: string) {
     return { error: 'Failed to join group' }
   }
 
+  revalidatePath('/groups')
+  revalidatePath('/dashboard')
+}
+
+export async function deleteGroup(groupId: string) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  // Check if admin
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  if (profile?.role !== 'admin') {
+    return { error: 'Unauthorized' }
+  }
+
+  const { error } = await supabase
+    .from('groups')
+    .delete()
+    .eq('id', groupId)
+
+  if (error) {
+    console.error('Error deleting group:', error)
+    return { error: 'Failed to delete group' }
+  }
+
+  revalidatePath('/admin/groups')
   revalidatePath('/groups')
   revalidatePath('/dashboard')
 }

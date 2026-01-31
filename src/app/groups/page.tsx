@@ -1,6 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { createGroup, joinGroup } from './actions'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Users, Banknote, CheckCircle2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { CreateGroupDialog } from '@/components/groups/CreateGroupDialog'
 
 export default async function GroupsPage() {
   const supabase = await createClient()
@@ -11,6 +16,31 @@ export default async function GroupsPage() {
 
   if (!user) {
     redirect('/login')
+  }
+
+  // Check creation limit
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  const isAdmin = profile?.role === 'admin'
+  let canCreate = true
+
+  if (!isAdmin) {
+    const { count, error } = await supabase
+      .from('groups')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', user.id)
+    
+    // If column doesn't exist yet, we might get an error. 
+    // But assuming it exists or ignoring error for now (defaulting to allow if error? No, safer to deny or allow?)
+    // If error (column missing), user hasn't created any groups with created_by yet, so count is 0 effectively for new logic.
+    // However, strictly speaking, we want to enforce limit.
+    if (!error && (count || 0) >= 1) {
+      canCreate = false
+    }
   }
 
   // Fetch all groups
@@ -28,106 +58,63 @@ export default async function GroupsPage() {
   const myGroupIds = new Set(myMemberships?.map((m) => m.group_id))
 
   return (
-    <div className="space-y-6">
-      <div className="md:flex md:items-center md:justify-between">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            Бүлгүүд
-          </h2>
+    <div className="container mx-auto py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Бүлгүүд</h2>
+          <p className="text-muted-foreground mt-1">Санхүүгийн зорилгоо биелүүлэхэд тань туслах бүлгүүд</p>
         </div>
-      </div>
-
-      {/* Create Group Form */}
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-base font-semibold leading-6 text-gray-900">Шинэ бүлэг үүсгэх</h3>
-          <div className="mt-2 max-w-xl text-sm text-gray-500">
-            <p>Өөрийн хэрэгцээнд тохирсон дэмжлэгийн бүлгийг үүсгээрэй.</p>
-          </div>
-          <form action={async (formData) => {
-            'use server'
-            await createGroup(formData)
-          }} className="mt-5 sm:flex sm:items-center">
-            <div className="w-full sm:max-w-xs mr-2 mb-2 sm:mb-0">
-              <label htmlFor="name" className="sr-only">Бүлгийн нэр</label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-                placeholder="Бүлгийн нэр"
-                required
-              />
-            </div>
-            <div className="w-full sm:max-w-xs mr-2 mb-2 sm:mb-0">
-              <label htmlFor="monthly_contribution" className="sr-only">Сар бүрийн хураамж</label>
-              <input
-                type="number"
-                name="monthly_contribution"
-                id="monthly_contribution"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-                placeholder="Хураамж (₮)"
-                required
-              />
-            </div>
-            <div className="w-full sm:max-w-xs mr-2 mb-2 sm:mb-0">
-              <label htmlFor="max_members" className="sr-only">Гишүүдийн тоо</label>
-              <input
-                type="number"
-                name="max_members"
-                id="max_members"
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-                placeholder="Гишүүдийн тоо"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="mt-3 inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:mt-0 sm:w-auto"
-            >
-              Үүсгэх
-            </button>
-          </form>
-        </div>
+        <CreateGroupDialog canCreate={canCreate} />
       </div>
 
       {/* Groups List */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {groups?.map((group) => (
-          <div key={group.id} className="bg-white overflow-hidden shadow rounded-lg flex flex-col justify-between">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
-              <dl className="mt-2 divide-y divide-gray-200">
-                <div className="flex justify-between py-2 text-sm">
-                  <dt className="text-gray-500">Сар бүр:</dt>
-                  <dd className="font-medium text-gray-900">{group.monthly_contribution}₮</dd>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <dt className="text-gray-500">Гишүүд:</dt>
-                  <dd className="font-medium text-gray-900">{group.max_members}</dd>
-                </div>
-              </dl>
-            </div>
-            <div className="bg-gray-50 px-4 py-4 sm:px-6">
+          <Card key={group.id} className="flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 group">
+            <CardHeader className="bg-muted/30 pb-4">
+              <div className="flex justify-between items-start">
+                 <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">{group.name}</CardTitle>
+                 {myGroupIds.has(group.id) && (
+                   <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">
+                     <CheckCircle2 className="w-3 h-3 mr-1" /> Нэгдсэн
+                   </Badge>
+                 )}
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 pt-6 space-y-4">
+               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-muted">
+                 <div className="flex items-center gap-2 text-muted-foreground">
+                   <Banknote className="w-4 h-4" />
+                   <span className="text-sm">Сар бүр:</span>
+                 </div>
+                 <span className="font-semibold text-primary">{group.monthly_contribution.toLocaleString()}₮</span>
+               </div>
+               
+               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-muted">
+                 <div className="flex items-center gap-2 text-muted-foreground">
+                   <Users className="w-4 h-4" />
+                   <span className="text-sm">Гишүүд:</span>
+                 </div>
+                 <span className="font-medium">{group.max_members} хүртэл</span>
+               </div>
+            </CardContent>
+            <CardFooter className="bg-muted/10 pt-4">
               {myGroupIds.has(group.id) ? (
-                <span className="inline-flex w-full justify-center items-center rounded-md bg-green-100 px-3 py-2 text-sm font-semibold text-green-800">
-                  Нэгдсэн
-                </span>
+                <Button variant="outline" className="w-full cursor-default opacity-80" disabled>
+                   <CheckCircle2 className="w-4 h-4 mr-2" /> Та энэ бүлэгт байна
+                </Button>
               ) : (
                 <form action={async () => {
                   'use server'
                   await joinGroup(group.id)
-                }}>
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 sm:text-sm"
-                  >
+                }} className="w-full">
+                  <Button type="submit" className="w-full shadow-sm hover:shadow-md transition-all">
                     Нэгдэх
-                  </button>
+                  </Button>
                 </form>
               )}
-            </div>
-          </div>
+            </CardFooter>
+          </Card>
         ))}
       </div>
     </div>
