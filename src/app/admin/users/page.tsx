@@ -35,10 +35,13 @@ export default async function UsersPage() {
     return {
       id: user.id,
       email: user.email,
+      name: user.name,
+      loan_type: user.loan_type,
       role: user.role,
       created_at: user.created_at,
       total_payment: totalPayment,
       groups: userGroups,
+      account_number: user.account_number,
     }
   })
 

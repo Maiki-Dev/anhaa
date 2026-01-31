@@ -50,6 +50,17 @@ export default async function SignupPage({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="account_number">Дансны дугаар</Label>
+              <Input
+                id="account_number"
+                name="account_number"
+                type="text"
+                placeholder="Таны дансны дугаар"
+                required
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="loan_type">Зээлийн төрөл</Label>
               {/* Using native select for now to ensure form submission works easily without client component wrapper */}
               <div className="relative">

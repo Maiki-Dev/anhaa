@@ -133,3 +133,61 @@ export async function updateUserRole(userId: string, newRole: string) {
   revalidatePath('/admin/users')
   return { success: true }
 }
+
+export async function updateUser(userId: string, data: { name?: string, loan_type?: string, account_number?: string, email?: string }) {
+  const supabase = await createClient()
+  
+  // Check if current user is admin
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Unauthorized" }
+  
+  const { data: currentUserProfile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single()
+    
+  if (currentUserProfile?.role !== 'admin') {
+    return { error: "Permission denied" }
+  }
+
+  // Initialize admin client for bypassing RLS if key is available
+  let db = supabase
+  let supabaseAdmin = null
+  
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+     supabaseAdmin = await createAdminClient()
+     db = supabaseAdmin
+   }
+
+  const { error } = await db
+    .from('users')
+    .update({
+        ...(data.name && { name: data.name }),
+        ...(data.loan_type && { loan_type: data.loan_type }),
+        ...(data.account_number && { account_number: data.account_number }),
+        // Email update in public table (usually handled via trigger from auth, but admin might force sync)
+        ...(data.email && { email: data.email }) 
+    })
+    .eq('id', userId)
+
+  if (error) {
+    return { error: error.message }
+  }
+  
+  // If email is changed, we should try to update it in Auth as well if we have admin rights
+  if (data.email && supabaseAdmin) {
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        { email: data.email }
+      )
+      if (authError) {
+          console.error("Failed to update email in Auth:", authError)
+          // We don't fail the whole request, but warn. 
+          return { error: `Profile updated but Auth Email update failed: ${authError.message}` }
+      }
+  }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}

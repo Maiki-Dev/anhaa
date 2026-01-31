@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal, Trash, Shield, ShieldAlert, ShieldCheck } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Trash, Shield, Pencil } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,21 +17,42 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
-import { deleteUser, updateUserRole } from "./actions"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { deleteUser, updateUserRole, updateUser } from "./actions"
 import { toast } from "sonner"
 import { useState } from "react"
 
 export type User = {
   id: string
   email: string
+  name: string
+  loan_type: string
   role: string
   created_at: string
   total_payment: number
   groups: string[]
+  account_number: string
 }
 
 const ActionsCell = ({ user }: { user: User }) => {
     const [isLoading, setIsLoading] = useState(false)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [editForm, setEditForm] = useState({
+        name: user.name || '',
+        loan_type: user.loan_type || 'bank',
+        account_number: user.account_number || '',
+        email: user.email || ''
+    })
 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return
@@ -59,7 +80,23 @@ const ActionsCell = ({ user }: { user: User }) => {
         }
     }
 
+    const handleEditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsLoading(true)
+        
+        const result = await updateUser(user.id, editForm)
+        
+        setIsLoading(false)
+        if (result.error) {
+            toast.error(result.error)
+        } else {
+            toast.success("User updated successfully")
+            setIsEditDialogOpen(false)
+        }
+    }
+
     return (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
@@ -79,6 +116,13 @@ const ActionsCell = ({ user }: { user: User }) => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             
+            <DialogTrigger asChild>
+                <DropdownMenuItem>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit User
+                </DropdownMenuItem>
+            </DialogTrigger>
+
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Shield className="mr-2 h-4 w-4" />
@@ -99,6 +143,65 @@ const ActionsCell = ({ user }: { user: User }) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+                Make changes to the user's profile here. Click save when you're done.
+            </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                        id="email" 
+                        value={editForm.email} 
+                        onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input 
+                        id="name" 
+                        value={editForm.name} 
+                        onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="account_number">Account Number</Label>
+                    <Input 
+                        id="account_number" 
+                        value={editForm.account_number} 
+                        onChange={(e) => setEditForm({...editForm, account_number: e.target.value})}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="loan_type">Loan Type</Label>
+                    <div className="relative">
+                        <select
+                            id="loan_type"
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                            value={editForm.loan_type}
+                            onChange={(e) => setEditForm({...editForm, loan_type: e.target.value})}
+                        >
+                            <option value="bank">Банкны зээл</option>
+                            <option value="nbfi">ББСБ-ын зээл</option>
+                            <option value="app">Аппликейшны зээл</option>
+                        </select>
+                         <div className="absolute right-3 top-3 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Saving..." : "Save changes"}
+                    </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+        </Dialog>
     )
 }
 
@@ -165,6 +268,11 @@ export const columns: ColumnDef<User>[] = [
         </div>
       )
     },
+  },
+  {
+    accessorKey: "account_number",
+    header: "Account No",
+    cell: ({ row }) => row.getValue("account_number") || "-",
   },
   {
     accessorKey: "created_at",
